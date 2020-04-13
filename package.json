@@ -1,19 +1,26 @@
 {
-  "name": "current_project",
+  "name": "node_mongo",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "devStart": "nodemon server.js"
+    "start": "nodemon server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.19.0",
     "express": "^4.17.1",
+    "express-graphql": "^0.9.0",
+    "graphql": "^15.0.0",
     "mongodb": "^3.5.5",
-    "mongoose": "^5.9.6"
+    "mongoose": "^5.9.6",
+    "multer": "^1.4.2",
+    "passport": "^0.4.1",
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {
+    "cypress": "^4.3.0",
     "dotenv": "^8.2.0",
     "nodemon": "^2.0.2"
   }
