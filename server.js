@@ -1,23 +1,66 @@
-require('dotenv').config()
+const path = require('path');
 
-const express = require('express')
-const mongoose = require('mongoose')
-const DATABASE_URL = 'mongodb://mongo:27017/node'
-const app = express()
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+const DATABASE_URL = 'mongodb://mongo:27017/node';
+
+const graphqlHttp  = require('express-graphql');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
+
+const auth = require('./middleware/auth');
+
+const app = express();
 
 
-mongoose.connect(DATABASE_URL);
-const db = mongoose.connection
-db.on('error', (error) => console.error(error))
-db.once('open', () => console.log('Connected to Database'))
+app.use(bodyParser.json());
 
-app.use(express.json())
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'OPTIONS, GET, POST, PUT, PATCH, DELETE'
+  );
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-const subscribersRouter = require('./routes/subscribers')
-app.use('/subscribers', subscribersRouter)
+app.use(auth);
 
-app.get('/', function(req,res){
-  res.send('helo dawidek)')
-})
 
-app.listen(3000, () => console.log('Server Started'))
+app.use('/graphql', graphqlHttp({
+  schema: graphqlSchema,
+  rootValue: graphqlResolver,
+  graphiql: true,
+  formatError(err) {
+    if (!err.originalError) {
+      return err;
+    }
+    const data = err.originalError.data;
+    const message = err.message || 'An error occurred.';
+    const code = err.originalError.code || 500;
+    return { message: message, status: code, data: data };
+  }
+}));
+
+
+app.use((error, req, res, next) => {
+  console.log(error, 'error');
+  const status = error.statusCode || 500;
+  const message = error.message;
+  const data = error.data;
+  res.status(status).json({ message: message, data: data });
+});
+
+
+mongoose
+  .connect(DATABASE_URL)
+  .then(result => {
+    app.listen(3000, () => console.log('server started on port 3000'));
+  })
+  .catch(err => console.log(err, 'err'));

@@ -1,15 +1,11 @@
 FROM node
 
-WORKDIR /usr/src/app
+WORKDIR /abcd
 
-COPY package.json .
-
-RUN npm install nodemon -g
-
-RUN npm install dotenv -g
+RUN npm install 
 
 COPY . .
 
 EXPOSE 3000
 
-CMD ["npm", "run", "devStart"]
+CMD ["npm", "run", "start"]
