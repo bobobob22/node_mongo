@@ -7,3 +7,9 @@ Backend dla aplikacji System umożliwiający anonimowe ankiety/głosowanie
     > npm install
     > docker-compose up
 
+
+##Endpoints
+
+Używamy graphql, cała dokumentacja widoczna jest tutaj:
+
+    > http://127.0.0.1:3000/graphql
