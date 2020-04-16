@@ -96,18 +96,26 @@ module.exports = {
       throw error;
     }
     const user = await User.findById(req.userId);
+
+    console.log('user', user)
+
     if (!user) {
       const error = new Error('Invalid user.');
       error.code = 401;
       throw error;
     }
-    console.log('forminput', formInput)
+
+    console.log(formInput);
     const form = new Form({
       title: formInput.title,
       content: formInput.content,
       questions: formInput.questions,
+      formType: formInput.formType,
       creator: user
     });
+
+    console.log('form', form);
+
     const createdForm = await form.save();
     user.forms.push(createdForm);
     await user.save();
@@ -131,9 +139,9 @@ module.exports = {
     const perPage = 2;
     const totalForms = await Form.find().countDocuments();
     const forms = await Form.find()
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * perPage)
-      .limit(perPage)
+      // .sort({ createdAt: -1 })
+      // .skip((page - 1) * perPage)
+      // .limit(perPage)
       .populate('creator');
     return {
       forms: forms.map(p => {
@@ -234,6 +242,7 @@ module.exports = {
       throw error;
     }
     await Form.findByIdAndRemove(id);
+
     const user = await User.findById(req.userId);
     user.forms.pull(id);
     await user.save();
@@ -257,12 +266,10 @@ module.exports = {
 
   users: async function(args, req) {
     const totalUsers = await User.find().countDocuments();
-    console.log('totalusers', totalUsers)
     const users = await User.find()
 
       return {
         users: users.map(p => {
-          console.log("P", p)
           return {
             ...p._doc,
             _id: p._id.toString(),
@@ -274,8 +281,6 @@ module.exports = {
         }),
         totalUsers: totalUsers
       };
-
-
   },
 
   updateStatus: async function({ status }, req) {

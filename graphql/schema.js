@@ -10,7 +10,7 @@ module.exports = buildSchema(`
     type Question {
         _id: ID!
         question: String!
-        type: String!
+        formType: String
         answers: [Answer]
     }
 
