@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 const Form = require('../models/form');
+const AddedForm = require('../models/addedForm');
 
 
 
@@ -71,11 +72,14 @@ module.exports = {
   },
 
   createForm: async function({ formInput }, req) {
+    console.log('create form')
+
     if (!req.isAuth) {
       const error = new Error('Not authenticated!');
       error.code = 401;
       throw error;
     }
+
     const errors = [];
     if (
       validator.isEmpty(formInput.title) ||
@@ -97,15 +101,12 @@ module.exports = {
     }
     const user = await User.findById(req.userId);
 
-    console.log('user', user)
-
     if (!user) {
       const error = new Error('Invalid user.');
       error.code = 401;
       throw error;
     }
 
-    console.log(formInput);
     const form = new Form({
       title: formInput.title,
       content: formInput.content,
@@ -113,17 +114,136 @@ module.exports = {
       formType: formInput.formType,
       creator: user
     });
-
-    console.log('form', form);
+    console.log("AAA", form)
 
     const createdForm = await form.save();
     user.forms.push(createdForm);
     await user.save();
+    console.log('user', user)
     return {
       ...createdForm._doc,
       _id: createdForm._id.toString(),
       createdAt: createdForm.createdAt.toISOString(),
       updatedAt: createdForm.updatedAt.toISOString()
+    };
+  },
+
+
+  saveForm: async function( { formInput }, req ) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated you cant save a form!');
+      error.code = 401;
+      throw error;
+    }
+
+    const errors = [];
+    if (
+      validator.isEmpty(formInput.title) ||
+      !validator.isLength(formInput.title, { min: 5 })
+    ) {
+      errors.push({ message: 'Title is invalid.' });
+    }
+    if (
+      validator.isEmpty(formInput.content) ||
+      !validator.isLength(formInput.content, { min: 5 })
+    ) {
+      errors.push({ message: 'Content is invalid.' });
+    }
+
+    if (errors.length > 0) {
+      const error = new Error('Invalid input.');
+      error.data = errors;
+      error.code = 422;
+      throw error;
+    }
+
+
+    const addedForm = new AddedForm({
+      title: formInput.title,
+      content: formInput.content,
+      questions: formInput.questions,
+      formType: formInput.formType,
+      parentId: formInput.parentId,
+    });
+
+
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      const error = new Error('Invalid user.');
+      error.code = 401;
+      throw error;
+    }
+
+    const createdForm = await addedForm.save();
+    if (!user.addedForms.includes(formInput.parentId)) {
+      user.addedForms.push(formInput.parentId);
+    }
+    await user.save();
+
+    return {
+      ...createdForm._doc,
+      _id: createdForm._id.toString(),
+      createdAt: createdForm.createdAt.toISOString(),
+      updatedAt: createdForm.updatedAt.toISOString()
+    };
+
+  },
+
+  addedForms: async function({ page, name }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated!');
+      error.code = 401;
+      throw error;
+    }
+    if (!page) {
+      page = 1;
+    }
+    const totalForms = await AddedForm.find().countDocuments();
+
+    let forms;
+    if (name) {
+      forms = await AddedForm.find({
+        title: name 
+      })
+    } else {
+      forms = await AddedForm.find()
+    }
+      // .sort({ createdAt: -1 })
+      // .skip((page - 1) * perPage)
+      // .limit(perPage)
+      // .populate('creator');
+
+    return {
+      forms: forms.map(p => {
+        return {
+          ...p._doc,
+          _id: p._id.toString(),
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString()
+        };
+      }),
+      totalForms: totalForms
+    };
+  },
+
+  addedForm: async function({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated!');
+      error.code = 401;
+      throw error;
+    }
+    const form = await AddedForm.findById(id);
+    if (!form) {
+      const error = new Error('No form found!');
+      error.code = 404;
+      throw error;
+    }
+    return {
+      ...form._doc,
+      _id: form._id.toString(),
+      createdAt: form.createdAt.toISOString(),
+      updatedAt: form.updatedAt.toISOString()
     };
   },
 

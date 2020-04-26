@@ -23,7 +23,8 @@ const userSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: 'Form'
     }
-  ]
+  ],
+  addedForms: [String]
 });
 
 module.exports = mongoose.model('User', userSchema);
