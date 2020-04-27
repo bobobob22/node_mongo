@@ -32,7 +32,7 @@ module.exports = buildSchema(`
         password: String
         status: String!
         forms: [Form!]!
-        addedForms: [ID]
+        addedForms: [String]
     }
 
     type AuthData {
@@ -80,6 +80,7 @@ module.exports = buildSchema(`
         form(id: ID!): Form!
         addedForms(page: Int, name: String): FormData!
         addedForm(id: ID!): Form!
+        availableForms(page: Int): FormData!
         user: User!
         users: UserData!
     }

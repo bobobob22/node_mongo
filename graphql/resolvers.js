@@ -72,8 +72,6 @@ module.exports = {
   },
 
   createForm: async function({ formInput }, req) {
-    console.log('create form')
-
     if (!req.isAuth) {
       const error = new Error('Not authenticated!');
       error.code = 401;
@@ -114,12 +112,10 @@ module.exports = {
       formType: formInput.formType,
       creator: user
     });
-    console.log("AAA", form)
 
     const createdForm = await form.save();
     user.forms.push(createdForm);
     await user.save();
-    console.log('user', user)
     return {
       ...createdForm._doc,
       _id: createdForm._id.toString(),
@@ -244,6 +240,35 @@ module.exports = {
       _id: form._id.toString(),
       createdAt: form.createdAt.toISOString(),
       updatedAt: form.updatedAt.toISOString()
+    };
+  },
+
+  availableForms: async function({ page }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated!');
+      error.code = 401;
+      throw error;
+    }
+    if (!page) {
+      page = 1;
+    }
+
+    const totalForms = await Form.find().countDocuments();
+    const user = await User.findById(req.userId);
+    const userAddedForms = await user.addedForms;
+
+    const forms = await Form.find({_id:{$nin:[
+      ...userAddedForms
+    ]}});
+
+    return {
+      forms: forms.map(p => {
+        return {
+          ...p._doc,
+          _id: p._id.toString(),
+        };
+      }),
+      totalForms: totalForms
     };
   },
 
