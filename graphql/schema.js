@@ -10,18 +10,19 @@ module.exports = buildSchema(`
     type Question {
         _id: ID!
         question: String!
-        type: String!
+        formType: String
         answers: [Answer]
     }
 
     type Form {
         _id: ID!
         title: String!
-        content: String!
-        creator: User!
+        content: String
+        creator: User
         createdAt: String!
         updatedAt: String!
         questions: [Question!]!
+        parentId: String
     }
 
     type User {
@@ -31,6 +32,7 @@ module.exports = buildSchema(`
         password: String
         status: String!
         forms: [Form!]!
+        addedForms: [String]
     }
 
     type AuthData {
@@ -64,6 +66,7 @@ module.exports = buildSchema(`
         title: String!
         content: String!
         questions: [QuestionInput]
+        parentId: String
     }
 
     type UserData {
@@ -75,6 +78,9 @@ module.exports = buildSchema(`
         login(email: String!, password: String!): AuthData!
         forms(page: Int): FormData!
         form(id: ID!): Form!
+        addedForms(page: Int, name: String): FormData!
+        addedForm(id: ID!): Form!
+        availableForms(page: Int): FormData!
         user: User!
         users: UserData!
     }
@@ -82,6 +88,7 @@ module.exports = buildSchema(`
     type RootMutation {
         createUser(userInput: UserInputData): User!
         createForm(formInput: FormInputData): Form!
+        saveForm(formInput: FormInputData): Form!
         updateForm(id: ID!, formInput: FormInputData): Form!
         deleteForm(id: ID!): Boolean
         updateStatus(status: String!): User!

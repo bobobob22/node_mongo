@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 const Form = require('../models/form');
+const AddedForm = require('../models/addedForm');
 
 
 
@@ -76,6 +77,7 @@ module.exports = {
       error.code = 401;
       throw error;
     }
+
     const errors = [];
     if (
       validator.isEmpty(formInput.title) ||
@@ -96,18 +98,21 @@ module.exports = {
       throw error;
     }
     const user = await User.findById(req.userId);
+
     if (!user) {
       const error = new Error('Invalid user.');
       error.code = 401;
       throw error;
     }
-    console.log('forminput', formInput)
+
     const form = new Form({
       title: formInput.title,
       content: formInput.content,
       questions: formInput.questions,
+      formType: formInput.formType,
       creator: user
     });
+
     const createdForm = await form.save();
     user.forms.push(createdForm);
     await user.save();
@@ -116,6 +121,154 @@ module.exports = {
       _id: createdForm._id.toString(),
       createdAt: createdForm.createdAt.toISOString(),
       updatedAt: createdForm.updatedAt.toISOString()
+    };
+  },
+
+
+  saveForm: async function( { formInput }, req ) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated you cant save a form!');
+      error.code = 401;
+      throw error;
+    }
+
+    const errors = [];
+    if (
+      validator.isEmpty(formInput.title) ||
+      !validator.isLength(formInput.title, { min: 5 })
+    ) {
+      errors.push({ message: 'Title is invalid.' });
+    }
+    if (
+      validator.isEmpty(formInput.content) ||
+      !validator.isLength(formInput.content, { min: 5 })
+    ) {
+      errors.push({ message: 'Content is invalid.' });
+    }
+
+    if (errors.length > 0) {
+      const error = new Error('Invalid input.');
+      error.data = errors;
+      error.code = 422;
+      throw error;
+    }
+
+
+    const addedForm = new AddedForm({
+      title: formInput.title,
+      content: formInput.content,
+      questions: formInput.questions,
+      formType: formInput.formType,
+      parentId: formInput.parentId,
+    });
+
+
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      const error = new Error('Invalid user.');
+      error.code = 401;
+      throw error;
+    }
+
+    const createdForm = await addedForm.save();
+    if (!user.addedForms.includes(formInput.parentId)) {
+      user.addedForms.push(formInput.parentId);
+    }
+    await user.save();
+
+    return {
+      ...createdForm._doc,
+      _id: createdForm._id.toString(),
+      createdAt: createdForm.createdAt.toISOString(),
+      updatedAt: createdForm.updatedAt.toISOString()
+    };
+
+  },
+
+  addedForms: async function({ page, name }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated!');
+      error.code = 401;
+      throw error;
+    }
+    if (!page) {
+      page = 1;
+    }
+    const totalForms = await AddedForm.find().countDocuments();
+
+    let forms;
+    if (name) {
+      forms = await AddedForm.find({
+        title: name 
+      })
+    } else {
+      forms = await AddedForm.find()
+    }
+      // .sort({ createdAt: -1 })
+      // .skip((page - 1) * perPage)
+      // .limit(perPage)
+      // .populate('creator');
+
+    return {
+      forms: forms.map(p => {
+        return {
+          ...p._doc,
+          _id: p._id.toString(),
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString()
+        };
+      }),
+      totalForms: totalForms
+    };
+  },
+
+  addedForm: async function({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated!');
+      error.code = 401;
+      throw error;
+    }
+    const form = await AddedForm.findById(id);
+    if (!form) {
+      const error = new Error('No form found!');
+      error.code = 404;
+      throw error;
+    }
+    return {
+      ...form._doc,
+      _id: form._id.toString(),
+      createdAt: form.createdAt.toISOString(),
+      updatedAt: form.updatedAt.toISOString()
+    };
+  },
+
+  availableForms: async function({ page }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated!');
+      error.code = 401;
+      throw error;
+    }
+    if (!page) {
+      page = 1;
+    }
+
+    const totalForms = await Form.find().countDocuments();
+    const user = await User.findById(req.userId);
+    const userAddedForms = await user.addedForms;
+
+    const forms = await Form.find({_id:{$nin:[
+      ...userAddedForms
+    ]}});
+
+    return {
+      forms: forms.map(p => {
+        return {
+          ...p._doc,
+          _id: p._id.toString(),
+        };
+      }),
+      totalForms: totalForms
     };
   },
 
@@ -131,9 +284,9 @@ module.exports = {
     const perPage = 2;
     const totalForms = await Form.find().countDocuments();
     const forms = await Form.find()
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * perPage)
-      .limit(perPage)
+      // .sort({ createdAt: -1 })
+      // .skip((page - 1) * perPage)
+      // .limit(perPage)
       .populate('creator');
     return {
       forms: forms.map(p => {
@@ -234,6 +387,7 @@ module.exports = {
       throw error;
     }
     await Form.findByIdAndRemove(id);
+
     const user = await User.findById(req.userId);
     user.forms.pull(id);
     await user.save();
@@ -257,12 +411,10 @@ module.exports = {
 
   users: async function(args, req) {
     const totalUsers = await User.find().countDocuments();
-    console.log('totalusers', totalUsers)
     const users = await User.find()
 
       return {
         users: users.map(p => {
-          console.log("P", p)
           return {
             ...p._doc,
             _id: p._id.toString(),
@@ -274,8 +426,6 @@ module.exports = {
         }),
         totalUsers: totalUsers
       };
-
-
   },
 
   updateStatus: async function({ status }, req) {

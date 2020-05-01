@@ -4,18 +4,16 @@ module.exports = (req, res, next) => {
   const authHeader = req.get('Authorization');
 
   if (!authHeader) {
-    req.isAuth = false;
+    req.isAuth = true;
+    req.isAdmin = false;
     return next();
   }
   const token = authHeader.split(' ')[1];
-
-  console.log('token', token)
 
   let decodedToken;
   try {
     decodedToken = jwt.verify(token, 'somesupersecretsecret');
   } catch (err) {
-    console.log(err, 'eererere')
     req.isAuth = false;
     return next();
   }
@@ -24,6 +22,11 @@ module.exports = (req, res, next) => {
     req.isAuth = false;
     return next();
   }
+
+  if (decodedToken.email === 'dupa@test.pl') {
+    req.isAdmin = true;
+  }
+
   req.userId = decodedToken.userId;
   req.isAuth = true;
   next();
