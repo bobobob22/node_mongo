@@ -4,7 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
-const DATABASE_URL = 'mongodb://mongo:27017/node';
+const DATABASE_URL = "mongodb://localhost/users_test";
 
 const graphqlHttp  = require('express-graphql');
 const graphqlSchema = require('./graphql/schema');

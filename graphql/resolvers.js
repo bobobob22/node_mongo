@@ -81,13 +81,13 @@ module.exports = {
     const errors = [];
     if (
       validator.isEmpty(formInput.title) ||
-      !validator.isLength(formInput.title, { min: 5 })
+      !validator.isLength(formInput.title, { min: 3 })
     ) {
       errors.push({ message: 'Title is invalid.' });
     }
     if (
       validator.isEmpty(formInput.content) ||
-      !validator.isLength(formInput.content, { min: 5 })
+      !validator.isLength(formInput.content, { min: 3 })
     ) {
       errors.push({ message: 'Content is invalid.' });
     }
@@ -124,7 +124,7 @@ module.exports = {
     };
   },
 
-
+  
   saveForm: async function( { formInput }, req ) {
     if (!req.isAuth) {
       const error = new Error('Not authenticated you cant save a form!');
@@ -200,15 +200,15 @@ module.exports = {
     let forms;
     if (name) {
       forms = await AddedForm.find({
-        title: name 
+        title: name
       })
     } else {
       forms = await AddedForm.find()
     }
-      // .sort({ createdAt: -1 })
-      // .skip((page - 1) * perPage)
-      // .limit(perPage)
-      // .populate('creator');
+    // .sort({ createdAt: -1 })
+    // .skip((page - 1) * perPage)
+    // .limit(perPage)
+    // .populate('creator');
 
     return {
       forms: forms.map(p => {
@@ -257,9 +257,7 @@ module.exports = {
     const user = await User.findById(req.userId);
     const userAddedForms = await user.addedForms;
 
-    const forms = await Form.find({_id:{$nin:[
-      ...userAddedForms
-    ]}});
+    const forms = await Form.find({ _id: { $nin: [...userAddedForms] } });
 
     return {
       forms: forms.map(p => {
@@ -333,11 +331,11 @@ module.exports = {
       error.code = 404;
       throw error;
     }
-    if (form.creator._id.toString() !== req.userId.toString()) {
-      const error = new Error('Not authorized!');
-      error.code = 403;
-      throw error;
-    }
+    // if (form.creator._id.toString() !== req.userId.toString()) {
+    //   const error = new Error('Not authorized!');
+    //   error.code = 403;
+    //   throw error;
+    // }
     const errors = [];
     if (
       validator.isEmpty(formInput.title) ||
@@ -359,6 +357,7 @@ module.exports = {
     }
     form.title = formInput.title;
     form.content = formInput.content;
+    form.questions = formInput.questions;
 
     const updatedForm = await form.save();
     return {
@@ -413,19 +412,19 @@ module.exports = {
     const totalUsers = await User.find().countDocuments();
     const users = await User.find()
 
-      return {
-        users: users.map(p => {
-          return {
-            ...p._doc,
-            _id: p._id.toString(),
-            name: p.name,
-            email: p.email,
-            status: p.status,
-            forms: p.forms,
-          };
-        }),
-        totalUsers: totalUsers
-      };
+    return {
+      users: users.map(p => {
+        return {
+          ...p._doc,
+          _id: p._id.toString(),
+          name: p.name,
+          email: p.email,
+          status: p.status,
+          forms: p.forms,
+        };
+      }),
+      totalUsers: totalUsers
+    };
   },
 
   updateStatus: async function({ status }, req) {

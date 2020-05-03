@@ -7,6 +7,12 @@ module.exports = buildSchema(`
         answer: String,
     }
 
+    type Solver {
+        name: String!,
+        email: String!,
+        number: String!,
+    }
+
     type Question {
         _id: ID!
         question: String!
