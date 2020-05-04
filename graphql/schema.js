@@ -1,5 +1,4 @@
-const { buildSchema } = require('graphql');
-
+const { buildSchema } = require("graphql");
 
 module.exports = buildSchema(`
     type Answer {
@@ -7,11 +6,29 @@ module.exports = buildSchema(`
         answer: String,
     }
 
-    type Solver {
-        name: String!,
-        email: String!,
-        number: String!,
+    input SolutionInput {
+        name: String!
+        email: String!
+        number: String!
+        solution: String!
+        surveyId: String!
     }
+
+    type Solution {
+        _id: String!
+        name: String!
+        email: String!
+        number: String!
+        solution: String!
+        surveyId: String!
+    }
+
+    type SolutionData {
+        entries: [Solution!]!
+        total: Int!
+    }
+
+
 
     type Question {
         _id: ID!
@@ -89,6 +106,7 @@ module.exports = buildSchema(`
         availableForms(page: Int): FormData!
         user: User!
         users: UserData!
+        solutions(page: Int!, name: String, email: String, number: String, surveyId: String): SolutionData
     }
 
     type RootMutation {
@@ -98,6 +116,7 @@ module.exports = buildSchema(`
         updateForm(id: ID!, formInput: FormInputData): Form!
         deleteForm(id: ID!): Boolean
         updateStatus(status: String!): User!
+        solve(solutionInput: SolutionInput): Solution!
     }
 
     schema {
