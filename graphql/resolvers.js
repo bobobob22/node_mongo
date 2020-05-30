@@ -124,11 +124,11 @@ module.exports = {
   },
 
   saveForm: async function ({ formInput }, req) {
-    if (!req.isAuth) {
-      const error = new Error("Not authenticated you cant save a form!");
-      error.code = 401;
-      throw error;
-    }
+    // if (!req.isAuth) {
+    //   const error = new Error("Not authenticated you cant save a form!");
+    //   error.code = 401;
+    //   throw error;
+    // }
 
     const errors = [];
     if (
@@ -159,19 +159,10 @@ module.exports = {
       parentId: formInput.parentId,
     });
 
-    const user = await User.findById(req.userId);
-
-    if (!user) {
-      const error = new Error("Invalid user.");
-      error.code = 401;
-      throw error;
-    }
-
     const createdForm = await addedForm.save();
-    if (!user.addedForms.includes(formInput.parentId)) {
-      user.addedForms.push(formInput.parentId);
-    }
-    await user.save();
+    // if (!user.addedForms.includes(formInput.parentId)) {
+    //   user.addedForms.push(formInput.parentId);
+    // }
 
     return {
       ...createdForm._doc,
@@ -505,7 +496,6 @@ module.exports = {
         .filter(byEmail)
         .filter(byNumber)
         .map((p) => {
-          console.log(p);
           return {
             _id: p._id.toString(),
             name: p.name,
