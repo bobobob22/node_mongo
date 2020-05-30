@@ -496,6 +496,7 @@ module.exports = {
         .filter(byEmail)
         .filter(byNumber)
         .map((p) => {
+          console.log(p);
           return {
             _id: p._id.toString(),
             name: p.name,
