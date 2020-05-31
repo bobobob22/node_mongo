@@ -445,6 +445,13 @@ module.exports = {
     return { ...createdSolution._doc, _id: createdSolution._id.toString() };
   },
 
+  userSolvedSurvey: async function ({ solution }) {
+    const solutions = await Solution.find();
+
+    const s = solutions.find((s) => s.solution === solution) || null;
+    return s;
+  },
+
   solutions: async function (args, req) {
     const total = await Solution.find().countDocuments();
     const solutions = await Solution.find();
@@ -476,8 +483,6 @@ module.exports = {
     };
 
     const bySurveyId = (s) => {
-      console.log(s.surveyId, surveyId, s.surveyId.includes(surveyId));
-
       if (surveyId && !s.surveyId.includes(surveyId)) {
         return false;
       }
@@ -496,7 +501,6 @@ module.exports = {
         .filter(byEmail)
         .filter(byNumber)
         .map((p) => {
-          console.log(p);
           return {
             _id: p._id.toString(),
             name: p.name,

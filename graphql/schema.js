@@ -107,6 +107,7 @@ module.exports = buildSchema(`
         user: User!
         users: UserData!
         solutions(page: Int!, name: String, email: String, number: String, surveyId: String): SolutionData
+        userSolvedSurvey(solution: String): Solution
     }
 
     type RootMutation {
