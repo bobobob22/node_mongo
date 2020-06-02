@@ -24,7 +24,7 @@ Używamy graphql, cała dokumentacja widoczna jest tutaj:
     
 # Dokumentacja
 
-Dokumentacja projektu dostępna jest [tutaj](https://machina123.github.io/FieldGameRestApi).
+Dokumentacja projektu dostępna jest [tutaj](https://test.trunky.usermd.net/index.html).
 
 # Licencja
 
